@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class DepartmentModel {
+public class RequestModel {
     private Long id;
     private String name;
     private String number;

@@ -3,7 +3,7 @@ package dev.danvega.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.danvega.domain.Employee;
-import dev.danvega.domain.Model.EmployeeModel;
+import dev.danvega.domain.Model.RequestModel;
 import dev.danvega.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeRepository employeeRepository;
 
     @Override
-    public void saveEmployee(EmployeeModel employeeModel){
+    public void saveEmployee(RequestModel employeeModel){
         Employee employee = null;
         if(employeeModel.getId() != null){
             employee = employeeRepository.findById(employeeModel.getId()).orElse(null);

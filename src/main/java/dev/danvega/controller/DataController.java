@@ -1,7 +1,6 @@
 package dev.danvega.controller;
 
-import dev.danvega.domain.Model.DepartmentModel;
-import dev.danvega.domain.Model.EmployeeModel;
+import dev.danvega.domain.Model.RequestModel;
 import dev.danvega.service.DepartmentService;
 import dev.danvega.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,24 +20,29 @@ public class DataController {
     private EmployeeService employeeService;
 
 
-    @GetMapping("")
-    public  String processData() {
-        departmentService.departmentSave();
-        employeeService.employeeSave();
-        return "map";
+    @PostMapping("/save/{tableName}")
+    public Map<String, Object> saveData(@PathVariable("tableName") String tableName,@RequestBody RequestModel model) {
+        Map<String, Object> map = new HashMap<>();
+        if(tableName.isEmpty()){
+            map.put("error", "table name not enter");
+            return map;
+        }
+
+        switch (tableName){
+           case "department":
+                    departmentService.saveDepartment(model);
+                    map.put("departments",departmentService.list());
+                    break;
+            case "employee":
+                    employeeService.saveEmployee(model);
+                    map.put("employees",employeeService.list());
+                    break;
+            default:
+                map.put("error", "table name wrong enter");
+        }
+        return map;
     }
 
-    @PostMapping("/save/department")
-    public  String saveDepartment(@RequestBody DepartmentModel departmentModel) {
-        departmentService.saveDepartment(departmentModel);
-        employeeService.employeeSave();
-        return "save";
-    }
-    @PostMapping("/save/employee")
-    public String saveEmployee(@RequestBody EmployeeModel employeeModel) {
-        employeeService.saveEmployee(employeeModel);
-        return "save";
-    }
 
     @GetMapping("/list")
     public  Map<String, Object> list() {

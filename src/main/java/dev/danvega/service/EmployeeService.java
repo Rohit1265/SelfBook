@@ -1,10 +1,10 @@
 package dev.danvega.service;
 
 import dev.danvega.domain.Employee;
-import dev.danvega.domain.Model.EmployeeModel;
+import dev.danvega.domain.Model.RequestModel;
 
 public interface EmployeeService {
-    public void saveEmployee(EmployeeModel employeeModel);
+    public void saveEmployee(RequestModel employeeModel);
 
     public void employeeSave();
 

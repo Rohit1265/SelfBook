@@ -20,8 +20,7 @@ public class JsontodbApplication {
 	CommandLineRunner runner(EmployeeService employeeService, DepartmentService departmentService){
 		return args -> {
 			// read JSON and load json
-			employeeService.employeeSave();
-			departmentService.departmentSave();
+			departmentService.saveJsonData();
 		};
 	}
 }
