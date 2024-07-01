@@ -1,8 +1,7 @@
 package dev.danvega;
 
 
-import dev.danvega.service.DepartmentService;
-import dev.danvega.service.EmployeeService;
+import dev.danvega.service.JsonReaderService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,13 +15,13 @@ public class JsontodbApplication {
 		SpringApplication.run(JsontodbApplication.class, args);
 	}
 
-	@Bean
-	CommandLineRunner runner(EmployeeService employeeService, DepartmentService departmentService){
+/*	@Bean
+	CommandLineRunner runner(JsonReaderService jsonReaderService){
 		return args -> {
 			// read JSON and load json
-			departmentService.saveJsonData();
-		};
-	}
+			jsonReaderService.createTableAndInsertData("DEP");
+		};*/
+
 }
 
 

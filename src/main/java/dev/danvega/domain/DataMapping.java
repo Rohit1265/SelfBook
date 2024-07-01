@@ -1,11 +1,15 @@
 package dev.danvega.domain;
 
-import lombok.Data;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Calendar;
 
-@Data
+
+@Setter
+@Getter
 @Entity
 public class DataMapping {
 

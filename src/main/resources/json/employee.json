@@ -1,27 +1,5 @@
-[
-  {
-    "id": 1,
-    "name": "Leanne Graham",
-    "number": "EP001"
-  },
-  {
-    "id": 2,
-    "name": "Ervin Howell",
-    "number": "EP002"
-  },
-  {
-    "id": 3,
-    "name": "Clementine Bauch",
-    "number": "EP003"
-  },
-  {
-    "id": 4,
-    "name": "Patricia Lebsack",
-    "number": "EP004"
-  },
-  {
-    "id": 5,
-    "name": "Chelsey Dietrich",
-    "number": "EP005"
-  }
-]
+{
+  "id": 1,
+  "name": "Leanne Graham",
+  "number": "EP001"
+}
