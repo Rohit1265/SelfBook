@@ -1,27 +1,8 @@
 [
-  {
-    "id": 1,
-    "name": "Manager Department",
-    "number": "DP001"
-  },
-  {
-    "id": 2,
-    "name": "Project Department",
-    "number": "DP002"
-  },
-  {
-    "id": 3,
-    "name": "Java Department",
-    "number": "DP003"
-  },
-  {
-    "id": 4,
-    "name": "IOS Department",
-    "number": "DP004"
-  },
-  {
-    "id": 5,
-    "name": "Mobile Department",
-    "number": "DP005"
+{
+    "id": "dep_id",
+    "name": "dep_name",
+    "number": "dep_number",
+    "errorMessage": "error_message"
   }
 ]
