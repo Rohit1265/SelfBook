@@ -20,11 +20,4 @@ public class DataMapping {
     private String sourceColumnName;
     private String targetTableName;
     private String targetColumnName;
-    private String createUserId;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Calendar createTs;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Calendar updateTs;
 }

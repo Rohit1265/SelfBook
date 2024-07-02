@@ -5,4 +5,7 @@
 /Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/repository/DepartmentRepository.java
 /Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/controller/DataController.java
 /Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/service/JsonReaderService.java
+/Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/domain/TargetTableName.java
+/Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/domain/Employee.java
+/Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/repository/EmployeeRepository.java
 /Users/RohitAnandeshi/Documents/GitHub/SelfBook/src/main/java/dev/danvega/JsontodbApplication.java

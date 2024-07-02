@@ -1,8 +1,11 @@
-dev/danvega/controller/DataController.class
 dev/danvega/domain/DataMapping.class
 dev/danvega/JsontodbApplication.class
+dev/danvega/domain/Department.class
+dev/danvega/controller/DataController.class
+dev/danvega/domain/Employee.class
+dev/danvega/domain/TargetTableName.class
 dev/danvega/service/JsonReaderServiceImpl.class
 dev/danvega/service/JsonReaderService.class
 dev/danvega/repository/DepartmentRepository.class
-dev/danvega/domain/Department.class
 dev/danvega/repository/DataMappingRepository.class
+dev/danvega/repository/EmployeeRepository.class

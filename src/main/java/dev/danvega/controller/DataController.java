@@ -1,11 +1,13 @@
 package dev.danvega.controller;
 
 import dev.danvega.domain.DataMapping;
+import dev.danvega.domain.TargetTableName;
 import dev.danvega.service.JsonReaderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,14 +18,16 @@ public class DataController {
     @Autowired
     JsonReaderService jsonReaderService;
 
-    @GetMapping("/import/{targetTableName}")
-    public Iterable<DataMapping> importJson(@PathVariable String targetTableName) {
+    @GetMapping("/import")
+    public Map<String, Object> importJson() {
+        Map<String, Object> map = new HashMap<>();
         try {
-            jsonReaderService.createTableAndInsertData(targetTableName);
-           // return "Data imported successfully";
-            return jsonReaderService.getDataMapping();
+            jsonReaderService.createTableAndInsertData();
+            map.put(TargetTableName.DEPARTMENT_TARGET.toString(), jsonReaderService.getDepartmentTargetData());
+            map.put(TargetTableName.EMPLOYEE_TARGET.toString(), jsonReaderService.getEmployeeTargetData());
+            return map;
         } catch (IOException e) {
-            //return "Error importing data: " + e.getMessage();
+            System.out.println(e.getMessage());
             return null;
         }
     }
@@ -35,6 +39,7 @@ public class DataController {
 
 
 
-//Left: Save source data to target datatable
-    //Dynamic mapping
+
+
+
 }

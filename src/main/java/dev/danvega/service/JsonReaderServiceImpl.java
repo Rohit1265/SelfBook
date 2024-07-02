@@ -3,8 +3,11 @@ package dev.danvega.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.danvega.domain.DataMapping;
 import dev.danvega.domain.Department;
+import dev.danvega.domain.Employee;
+import dev.danvega.domain.TargetTableName;
 import dev.danvega.repository.DataMappingRepository;
 import dev.danvega.repository.DepartmentRepository;
+import dev.danvega.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,15 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.springframework.core.io.ClassPathResource;
 
+import javax.persistence.Column;
 import java.io.InputStream;
 
-@Service("JsonReaderService")
+@Service
 public class JsonReaderServiceImpl implements JsonReaderService {
 
     @Autowired
@@ -35,43 +37,57 @@ public class JsonReaderServiceImpl implements JsonReaderService {
     private DepartmentRepository departmentRepository;
 
     @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
     private DataMappingRepository dataMappingRepository;
 
     @Value("${department.json}")
     private String departmentJson;
 
-    public JsonNode readJsonFile() throws IOException {
+    @Value("${employee.json}")
+    private String employeeJson;
+
+
+    @Override
+    public void createTableAndInsertData() throws IOException {
+        List<Department> departments = saveDataDepartment();
+        createTableAndInsertDataSetup(TargetTableName.DEPARTMENT_TARGET.toString(),departmentJson,Department.class, departments);
+        List<Employee> employees = saveDataEmployee();
+        createTableAndInsertDataSetup(TargetTableName.EMPLOYEE_TARGET.toString(),employeeJson,Employee.class, employees);
+    }
+
+    public void createTableAndInsertDataSetup(String targetTableName, String jsonFilePath, Class<?> clazz,  Iterable<?> object) throws IOException {
+        JsonNode jsonNode = readJsonFile(jsonFilePath);
+        if (jsonNode.isArray() && jsonNode.elements().hasNext()) {
+            JsonNode firstElement = jsonNode.elements().next();
+            createTable(targetTableName, firstElement, clazz);
+            insertDataMapping(targetTableName, jsonNode, clazz);
+            insertData(targetTableName, jsonNode, clazz,object);
+        }
+    }
+
+    private JsonNode readJsonFile(String filePath) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        ClassPathResource resource = new ClassPathResource(departmentJson);
+        ClassPathResource resource = new ClassPathResource(filePath);
         InputStream inputStream = resource.getInputStream();
         return objectMapper.readTree(inputStream);
     }
 
-    @Override
-    public void createTableAndInsertData(String targetTableName) throws IOException {
-        saveDepartmentData();
-        JsonNode jsonNode = readJsonFile();
-        if (jsonNode.isArray() && jsonNode.elements().hasNext()) {
-            JsonNode firstElement = jsonNode.elements().next();
-            createTable(targetTableName, firstElement);
-            insertDataMapping(targetTableName, jsonNode);
-        }
-    }
-
-    private void createTable(String targetTableName, JsonNode firstElement) {
+    private void createTable(String targetTableName, JsonNode firstElement, Class<?> clazz) {
         StringBuilder createTableQuery = new StringBuilder("CREATE TABLE ").append(targetTableName).append(" (");
 
         List<Map.Entry<String, JsonNode>> fieldList = new ArrayList<>();
         firstElement.fields().forEachRemaining(fieldList::add);
 
-        if (fieldList.size() == Department.class.getDeclaredFields().length) {
-            System.out.println("Field size matches Department class fields.");
+        if (fieldList.size() == clazz.getDeclaredFields().length) {
+            System.out.println("Field size matches " + clazz.getSimpleName() + " class fields.");
         } else {
-            System.out.println("Field size does not match Department class fields.");
+            System.out.println("Field size does not match " + clazz.getSimpleName() + " class fields.");
         }
 
         for (Map.Entry<String, JsonNode> field : fieldList) {
-            boolean verifyColumnName = ifFieldExists(Department.class, field.getKey());
+            boolean verifyColumnName = isFieldExists(clazz, field.getKey());
             System.out.println(verifyColumnName ? "match" : "not match");
 
             createTableQuery.append(field.getValue().asText())
@@ -81,7 +97,7 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         }
 
         createTableQuery.delete(createTableQuery.length() - 2, createTableQuery.length()).append(")");
-        System.out.println("query: " + createTableQuery);
+        System.out.println("create query: " + createTableQuery);
         jdbcTemplate.execute(createTableQuery.toString());
     }
 
@@ -98,26 +114,17 @@ public class JsonReaderServiceImpl implements JsonReaderService {
             return "VARCHAR(255)";
         }
     }
-
-    private void insertDataMapping(String tableName, JsonNode jsonNode) {
+    private void insertDataMapping(String tableName, JsonNode jsonNode, Class<?> clazz) {
         for (JsonNode element : jsonNode) {
             Iterator<Map.Entry<String, JsonNode>> fields = element.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
-                saveDataMapping(Department.class.getSimpleName(),field.getKey(),tableName,field.getValue().asText());
+                saveDataMapping(clazz.getSimpleName(), field.getKey(), tableName, field.getValue().asText());
             }
         }
-    }
-    private boolean ifFieldExists(Class<?> clazz, String columnName) {
-        for (Field field : clazz.getDeclaredFields()) {
-            if (columnName.equals(field.getName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
-    private void saveDataMapping(String sourceTableName,String sourceColumnName,String targetTableName,String targetColumnName){
+    private void saveDataMapping(String sourceTableName, String sourceColumnName, String targetTableName, String targetColumnName) {
         DataMapping dataMapping = new DataMapping();
         dataMapping.setSourceTableName(sourceTableName);
         dataMapping.setSourceColumnName(sourceColumnName);
@@ -126,31 +133,95 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         dataMappingRepository.save(dataMapping);
     }
 
- //Source table data
-    private void saveDepartmentData(){
+    private boolean isFieldExists(Class<?> clazz, String columnName) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (columnName.equals(field.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    private void insertData(String tableName, JsonNode jsonNode, Class<?> clazz, Iterable<?> object) {
+        for (Object entity : object) {
+            for (JsonNode element : jsonNode) {
+                StringBuilder insertQuery = new StringBuilder("INSERT INTO ").append(tableName).append(" (");
+                StringBuilder columns = new StringBuilder();
+                StringBuilder values = new StringBuilder("VALUES (");
+
+                Iterator<Map.Entry<String, JsonNode>> fields = element.fields();
+                while (fields.hasNext()) {
+                    Map.Entry<String, JsonNode> field = fields.next();
+                    Field[] entityFields = clazz.getDeclaredFields();
+
+                    for (Field entityField : entityFields) {
+                        if (field.getKey().equals(entityField.getName())) {
+                            columns.append(field.getValue().asText()).append(", ");
+                            try {
+                                entityField.setAccessible(true);
+                                values.append("'").append(entityField.get(entity)).append("', ");
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+                columns.delete(columns.length() - 2, columns.length());
+                values.delete(values.length() - 2, values.length()).append(")");
+
+                insertQuery.append(columns).append(") ").append(values);
+
+                System.out.println("insertQuery: " + insertQuery);
+                jdbcTemplate.execute(insertQuery.toString());
+            }
+        }
+    }
+
+    private  List<Department>  saveDataDepartment() {
         List<Department> departments = new ArrayList<>();
         Department department = new Department();
 
         department.setName("Vishal");
         department.setNumber("123");
         department.setErrorMessage("error 1");
-
         departments.add(department);
 
         Department department1 = new Department();
-
         department1.setName("Deep");
         department1.setNumber("456");
         department1.setErrorMessage("error 2");
-
-
         departments.add(department1);
 
-        departmentRepository.saveAll(departments);
+       return (List<Department>) departmentRepository.saveAll(departments);
     }
+
+    private List<Employee> saveDataEmployee() {
+        List<Employee> employees = new ArrayList<>();
+        Employee employee = new Employee();
+        employee.setName("Employee 1");
+        employee.setNumber("EMP001");
+        employees.add(employee);
+
+        Employee employee1 = new Employee();
+        employee1.setName("Employee 2");
+        employee1.setNumber("EMP002");
+        employees.add(employee1);
+
+        return (List<Employee>) employeeRepository.saveAll(employees);
+    }
+
     public Iterable<DataMapping> getDataMapping(){
         return dataMappingRepository.findAll();
+    }
+
+    public  List<Map<String, Object>>  getDepartmentTargetData(){
+        String sql = "SELECT * FROM "+TargetTableName.DEPARTMENT_TARGET;
+        return jdbcTemplate.queryForList(sql);
+    }
+
+    public  List<Map<String, Object>>  getEmployeeTargetData(){
+        String sql = "SELECT * FROM "+TargetTableName.EMPLOYEE_TARGET;
+        return jdbcTemplate.queryForList(sql);
     }
 
 

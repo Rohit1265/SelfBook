@@ -15,13 +15,13 @@ public class JsontodbApplication {
 		SpringApplication.run(JsontodbApplication.class, args);
 	}
 
-/*	@Bean
-	CommandLineRunner runner(JsonReaderService jsonReaderService){
-		return args -> {
-			// read JSON and load json
-			jsonReaderService.createTableAndInsertData("DEP");
-		};*/
-
+//	@Bean
+//	CommandLineRunner runner(JsonReaderService jsonReaderService){
+//		return args -> {
+//			// read JSON and load json
+//			jsonReaderService.createTableAndInsertData();
+//		};
+//	}
 }
 
 

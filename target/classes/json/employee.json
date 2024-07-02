@@ -1,5 +1,7 @@
-{
-  "id": 1,
-  "name": "Leanne Graham",
-  "number": "EP001"
-}
+[
+  {
+    "id": "emp_id",
+    "name": "emp_name",
+    "number": "emp_number"
+  }
+]
