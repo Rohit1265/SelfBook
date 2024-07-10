@@ -1,8 +1,20 @@
-[
 {
-    "id": "dep_id",
-    "name": "dep_name",
-    "number": "dep_number",
-    "errorMessage": "error_message"
-  }
-]
+  "type": "SourceSchema",
+  "fields": [
+    {
+      "column_name": "ID",
+      "data_type": "VARCHAR",
+      "data_length": "0"
+    },
+    {
+      "column_name": "NAME",
+      "data_type": "VARCHAR",
+      "data_length": "0"
+    },
+    {
+      "column_name": "NUMBER",
+      "data_type": "VARCHAR",
+      "data_length": "0"
+    }
+  ]
+}

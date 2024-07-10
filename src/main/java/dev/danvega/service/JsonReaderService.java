@@ -8,6 +8,8 @@ import java.util.Map;
 
 public interface JsonReaderService {
 
+    void createTableFromJson();
+
     public void createTableAndInsertData() throws IOException;
 
     Iterable<DataMapping> getDataMapping();

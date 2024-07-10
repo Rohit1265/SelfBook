@@ -21,8 +21,9 @@ import java.util.*;
 
 import org.springframework.core.io.ClassPathResource;
 
-import javax.persistence.Column;
 import java.io.InputStream;
+
+import java.io.File;
 
 @Service
 public class JsonReaderServiceImpl implements JsonReaderService {
@@ -48,6 +49,41 @@ public class JsonReaderServiceImpl implements JsonReaderService {
     @Value("${employee.json}")
     private String employeeJson;
 
+    @Override
+    public void createTableFromJson() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            InputStream inputStream = new ClassPathResource(departmentJson).getInputStream();
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+            JsonNode fieldsNode = rootNode.path("fields");
+            String createTableSql = generateCreateTableSql(fieldsNode);
+            jdbcTemplate.execute(createTableSql);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String generateCreateTableSql(JsonNode fieldsNode) {
+        StringBuilder sql = new StringBuilder("CREATE TABLE DEPARTMENT_TD (");
+        for (int i = 0; i < fieldsNode.size(); i++) {
+            JsonNode fieldNode = fieldsNode.get(i);
+            String columnName = fieldNode.path("column_name").asText();
+            String dataType = fieldNode.path("data_type").asText();
+            String dataLength = fieldNode.path("data_length").asText();
+
+            sql.append(columnName).append(" ").append(dataType);
+            if (!dataLength.equals("0")) {
+                sql.append("(").append(dataLength).append(")");
+            }
+            if (i < fieldsNode.size() - 1) {
+                sql.append(", ");
+            }
+        }
+        sql.append(")");
+        return sql.toString();
+    }
+
+
 
     @Override
     public void createTableAndInsertData() throws IOException {
@@ -56,6 +92,9 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         List<Employee> employees = saveDataEmployee();
         createTableAndInsertDataSetup(TargetTableName.EMPLOYEE_TARGET.toString(),employeeJson,Employee.class, employees);
     }
+
+
+
 
     public void createTableAndInsertDataSetup(String targetTableName, String jsonFilePath, Class<?> clazz,  Iterable<?> object) throws IOException {
         JsonNode jsonNode = readJsonFile(jsonFilePath);
@@ -223,6 +262,8 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         String sql = "SELECT * FROM "+TargetTableName.EMPLOYEE_TARGET;
         return jdbcTemplate.queryForList(sql);
     }
+
+
 
 
 }

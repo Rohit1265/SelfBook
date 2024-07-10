@@ -19,17 +19,12 @@ public class DataController {
     JsonReaderService jsonReaderService;
 
     @GetMapping("/import")
-    public Map<String, Object> importJson() {
+    public String importJson() {
         Map<String, Object> map = new HashMap<>();
-        try {
-            jsonReaderService.createTableAndInsertData();
-            map.put(TargetTableName.DEPARTMENT_TARGET.toString(), jsonReaderService.getDepartmentTargetData());
-            map.put(TargetTableName.EMPLOYEE_TARGET.toString(), jsonReaderService.getEmployeeTargetData());
-            return map;
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
+        jsonReaderService.createTableFromJson();
+//        map.put(TargetTableName.DEPARTMENT_TARGET.toString(), jsonReaderService.getDepartmentTargetData());
+//        map.put(TargetTableName.EMPLOYEE_TARGET.toString(), jsonReaderService.getEmployeeTargetData());
+        return "Table Created Successfully.";
     }
 
     @GetMapping("/list")
