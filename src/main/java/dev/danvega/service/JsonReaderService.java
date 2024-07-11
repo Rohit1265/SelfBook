@@ -1,21 +1,11 @@
 package dev.danvega.service;
 
-import dev.danvega.domain.DataMapping;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public interface JsonReaderService {
+    String verifyTableColumnNameAndJsonColumnName(String tableName) throws IOException;
 
-    void createTableFromJson();
-
-    public void createTableAndInsertData() throws IOException;
-
-    Iterable<DataMapping> getDataMapping();
-
-    List<Map<String, Object>> getDepartmentTargetData();
-
-    List<Map<String, Object>> getEmployeeTargetData();
 
 }
