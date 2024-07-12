@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("")
 public class DataController {
@@ -12,9 +15,9 @@ public class DataController {
     @Autowired
     JsonReaderService jsonReaderService;
 
-    @GetMapping("/import/{tableName}")
-    public String importJson(@PathVariable(value = "tableName") String tableName) throws IOException {
-        return jsonReaderService.verifyTableColumnNameAndJsonColumnName(tableName);
+    @GetMapping("/import")
+    public List<Map<String, Object>> importJson( @RequestParam(value = "targetTable", defaultValue = "", required = false) String targetTable) throws IOException {
+        return jsonReaderService.verifyTableColumnNameAndJsonColumnName(targetTable);
     }
 
 

@@ -1,5 +1,6 @@
 {
   "type": "SourceSchema",
+  "target_table": "department_td",
   "fields": [
     {
       "column_name": "ID",

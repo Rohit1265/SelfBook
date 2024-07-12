@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,37 +27,52 @@ public class JsonReaderServiceImpl implements JsonReaderService {
     JsonReaderService jsonReaderService;
     @Value("${department.json}")
     String departmentJson;
+
+    private final String SOURCE_TABLE= "department";
     @Override
-    public String verifyTableColumnNameAndJsonColumnName(String tableName) throws IOException {
+    public List<Map<String, Object>>  verifyTableColumnNameAndJsonColumnName(String targetTable) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             // Reading Json File
             InputStream inputStream = new ClassPathResource(departmentJson).getInputStream();
             JsonNode rootNode = objectMapper.readTree(inputStream);
-            // Getting the fields from Json File
+            // Getting the target table name from Json File
+            String targetTableName= targetTable != null && !targetTable.isEmpty() ? targetTable : rootNode.get("target_table").asText();
+            // Getting fields from Json File
             JsonNode fieldsNode = rootNode.path("fields");
-            // Creating a table table in the database.
-            //And If there's a table already in the DB then there's no need for the below method "createTableFromJson".
-            createTableFromJson(tableName, fieldsNode);
+            // Creating the table in the database.
+            // If there's already exsisting in the DB then "createTableFromJson" and createTableFromJson
+            // Create SOURCE Table
+            createTableFromJson(SOURCE_TABLE, fieldsNode);
+            // Data Insert SOURCE Table
+            insertDataSourceTable(SOURCE_TABLE);
+            // Creating the Target Table
+            createTableFromJson(targetTableName, fieldsNode);
             // Getting the source column name from the source table in the database. (With MetaData)
-            Map<String, String> tableColumns = getColumnNamesWithMetaData(tableName);
-            // Verifing the Source columnName and JsonColumn name.
+            Map<String, String> tableColumns = getColumnNamesWithMetaData(targetTableName);
+            // Verifing the sourceColumn Name and jsonColumn Name
             for (JsonNode field : fieldsNode) {
                 String columnName = field.get("column_name").asText();
                 if (!tableColumns.containsKey(columnName)) {
-                    System.out.println("Column does not match.");
-                    return "Column does not match.";
+                    System.out.println("Column does not Match.");
+                    return null;
                 }
             }
             System.out.println("Columns Match.");
-            return "Columns Match.";
+            // Insert Data SOURCE Table to Target Table
+            String insertSql = generateInsertSql(SOURCE_TABLE, targetTableName, fieldsNode);
+            System.out.println("insertSql-----"+insertSql);
+            jdbcTemplate.execute(insertSql);
+
+            // Getting Data from Target Table
+            return getTargetTableData(targetTableName);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         System.out.println("Columns Match.");
-        return "Columns Match.";
+        return null;
     }
 
     // Get the source column name With MetaData
@@ -74,6 +90,23 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         });
     }
 
+    private String generateInsertSql(String sourceTable, String targetTable, JsonNode fieldsNode) {
+        StringBuilder columns = new StringBuilder();
+        StringBuilder values = new StringBuilder();
+
+        for (JsonNode fieldNode : fieldsNode) {
+            String columnName = fieldNode.get("column_name").asText();
+            columns.append(columnName).append(", ");
+            values.append("source.").append(columnName).append(", ");
+        }
+
+        // Remove the trailing comma and space
+        columns.setLength(columns.length() - 2);
+        values.setLength(values.length() - 2);
+
+        return String.format("INSERT INTO %s (%s) SELECT %s FROM %s source", targetTable, columns.toString(), values.toString(), sourceTable);
+    }
+
     // Get the source column name Without MetaData
     public Map<String, String> getColumnNameWithoutMetaData(String tableName) {
         String sql = "SELECT COLUMN_NAME, TYPE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?";
@@ -89,8 +122,17 @@ public class JsonReaderServiceImpl implements JsonReaderService {
     }
 
     public void createTableFromJson(String tableName, JsonNode fieldsNode) {
+        try {
         String createTableSql = generateCreateTableSql(tableName, fieldsNode);
         jdbcTemplate.execute(createTableSql);
+        } catch (Exception e) {
+            System.out.println("Table "+tableName+" already exists, skipping table creation.");
+        }
+    }
+
+    public void insertDataSourceTable(String tableName) {
+        String insertSQL = "Insert into " + tableName + " (ID, NAME, NUMBER) values ('1','Bridging','R0001')";
+        jdbcTemplate.execute(insertSQL);
     }
 
     private String generateCreateTableSql(String tableName, JsonNode fieldsNode) {
@@ -113,6 +155,9 @@ public class JsonReaderServiceImpl implements JsonReaderService {
         return sql.toString();
     }
 
-
+    private List<Map<String, Object>> getTargetTableData(String tableName){
+        String sql = "select * from "+tableName;
+        return jdbcTemplate.queryForList(sql);
+    }
 
 }
